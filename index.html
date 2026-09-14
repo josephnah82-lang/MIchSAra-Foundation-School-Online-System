@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MICHSARA Foundation School — Administration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1C2B27; --paper:#F6F0DF; --paper-deep:#EFE6CC; --line:#D9C89E;
+    --maroon:#8B2A2A; --maroon-deep:#6E2020; --gold:#C89B3C;
+    --green:#2F4F44; --green-deep:#203A32;
+    --present:#3F7A5C; --absent:#B23A3A; --paid:#3F7A5C; --owed:#B23A3A;
+    --white:#FFFDF7;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);
+    background-image:repeating-linear-gradient(transparent, transparent 27px, var(--line) 28px);
+    color:var(--ink);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;}
+  .app{max-width:1160px;margin:0 auto;padding:0 20px 60px;}
+
+  header.letterhead{background:var(--green-deep);color:var(--white);margin:0 -20px 0;
+    padding:28px 32px 22px;border-bottom:6px solid var(--gold);
+    display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+  .seal{width:56px;height:56px;border-radius:50%;border:2.5px solid var(--gold);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;font-weight:700;font-size:20px;color:var(--gold);flex-shrink:0;}
+  .letterhead h1{font-family:'Fraunces',serif;font-weight:600;font-size:26px;margin:0;letter-spacing:.2px;}
+  .letterhead p{margin:2px 0 0;font-size:13px;color:#D9CBA3;font-family:'IBM Plex Mono',monospace;}
+  .letterhead .spacer{flex:1;}
+  .who-badge{font-size:12px;color:var(--gold);font-weight:600;}
+  button.logout{background:none;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:6px;padding:7px 12px;font-size:12px;cursor:pointer;font-weight:600;}
+
+  nav.tabs{display:flex;gap:2px;margin-top:22px;border-bottom:2px solid var(--ink);flex-wrap:wrap;}
+  nav.tabs button{font-family:'Fraunces',serif;font-weight:600;font-size:15px;
+    background:var(--paper-deep);border:2px solid var(--ink);border-bottom:none;
+    padding:10px 18px 8px;border-radius:8px 8px 0 0;cursor:pointer;color:var(--ink);position:relative;top:2px;}
+  nav.tabs button.active{background:var(--maroon);color:var(--white);border-color:var(--maroon);}
+
+  main{background:var(--white);border:2px solid var(--ink);border-top:none;padding:26px;border-radius:0 0 10px 10px;}
+
+  h2.section-title{font-family:'Fraunces',serif;font-size:22px;margin:0 0 4px;color:var(--maroon-deep);}
+  .subtle{color:#5b6a65;font-size:13px;margin:0 0 20px;}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:26px;}
+  .card{border:1.5px solid var(--line);background:var(--paper);border-radius:10px;padding:16px 18px;border-left:5px solid var(--green);}
+  .card.warn{border-left-color:var(--absent);}
+  .card.gold{border-left-color:var(--gold);}
+  .card .num{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:28px;color:var(--ink);}
+  .card .label{font-size:12.5px;color:#5b6a65;margin-top:2px;text-transform:uppercase;letter-spacing:.4px;}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px;
+    color:var(--white);background:var(--green);padding:8px 8px;}
+  th:first-child{border-radius:6px 0 0 0;}
+  th:last-child{border-radius:0 6px 0 0;}
+  td{padding:8px 8px;border-bottom:1px solid var(--line);}
+  tr:nth-child(even) td{background:#FBF7EA;}
+  .num-cell{font-family:'IBM Plex Mono',monospace;}
+  .computed{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--maroon-deep);}
+  .pill{padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:600;color:#fff;display:inline-block;}
+  .pill.present{background:var(--present);}
+  .pill.absent{background:var(--absent);}
+  .pill.paid{background:var(--paid);}
+  .pill.owed{background:var(--owed);}
+  .pill.partial{background:var(--gold);color:var(--green-deep);}
+
+  .form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:end;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field label{font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;color:#5b6a65;font-weight:600;}
+  input,select{font-family:'IBM Plex Sans',sans-serif;padding:8px 10px;border:1.5px solid var(--line);
+    border-radius:6px;background:var(--paper);color:var(--ink);font-size:14px;}
+  input[type=number]{font-family:'IBM Plex Mono',monospace;width:90px;}
+  input[type=password]{width:140px;letter-spacing:2px;}
+  button.action{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:13.5px;
+    background:var(--maroon);color:var(--white);border:none;padding:9px 16px;border-radius:6px;cursor:pointer;}
+  button.action:hover{background:var(--maroon-deep);}
+  button.action.secondary{background:var(--green);}
+  button.action.secondary:hover{background:var(--green-deep);}
+  button.small-x{background:none;border:none;color:var(--absent);cursor:pointer;font-weight:700;font-size:14px;}
+
+  .empty{padding:30px;text-align:center;color:#8a978f;font-style:italic;border:1.5px dashed var(--line);border-radius:8px;}
+
+  .att-grid{display:flex;flex-direction:column;gap:6px;}
+  .att-row{display:flex;align-items:center;gap:12px;padding:8px 10px;border-bottom:1px solid var(--line);}
+  .att-row .name{flex:1;font-weight:500;}
+  .att-toggle{display:flex;gap:6px;}
+  .att-toggle button{border:1.5px solid var(--line);background:var(--paper);padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);}
+  .att-toggle button.present.on{background:var(--present);color:#fff;border-color:var(--present);}
+  .att-toggle button.absent.on{background:var(--absent);color:#fff;border-color:var(--absent);}
+
+  .grade-input{width:52px;}
+  .grades-table-wrap{overflow-x:auto;}
+  .grades-table-wrap table{min-width:960px;}
+  .grade-summary{display:flex;gap:22px;flex-wrap:wrap;margin:14px 0;font-size:13px;}
+  .grade-summary .gs{background:var(--paper);border:1.5px solid var(--line);border-radius:8px;padding:8px 14px;}
+  .grade-summary .gs b{font-family:'IBM Plex Mono',monospace;color:var(--maroon-deep);}
+
+  textarea{font-family:'IBM Plex Sans',sans-serif;padding:8px 10px;border:1.5px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);font-size:13.5px;width:100%;resize:vertical;}
+
+  #lockScreen{position:fixed;inset:0;background:var(--green-deep);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;}
+  .lock-card{background:var(--white);border-radius:12px;padding:32px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35);}
+  .lock-card h2{font-family:'Fraunces',serif;color:var(--maroon-deep);margin:0 0 4px;text-align:center;}
+  .lock-card p.subtle{text-align:center;}
+  .lock-tabs{display:flex;gap:6px;margin-bottom:18px;background:var(--paper-deep);padding:4px;border-radius:8px;}
+  .lock-tabs button{flex:1;border:none;background:transparent;padding:9px;border-radius:6px;font-weight:600;font-size:13px;cursor:pointer;color:var(--ink);}
+  .lock-tabs button.active{background:var(--maroon);color:#fff;}
+  .lock-card .field{width:100%;margin-bottom:12px;}
+  .lock-card input,.lock-card select{width:100%;}
+  .lock-error{color:var(--absent);font-size:12.5px;margin:-4px 0 10px;min-height:14px;}
+  .lock-note{font-size:11.5px;color:#8a978f;margin-top:14px;text-align:center;line-height:1.5;}
+
+  #printArea{display:none;}
+  @media print{
+    body *{visibility:hidden;background:#fff !important;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{display:block;position:absolute;top:0;left:0;width:100%;padding:16px;}
+    .report-card{border:3px double var(--ink);padding:18px;}
+  }
+  .report-card h2{font-family:'Fraunces',serif;text-align:center;margin:0 0 2px;color:var(--maroon-deep);}
+  .report-card .rc-sub{text-align:center;font-size:12px;color:#5b6a65;margin-bottom:14px;font-family:'IBM Plex Mono',monospace;}
+  .rc-meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:13px;margin-bottom:12px;border-bottom:1.5px solid var(--ink);padding-bottom:8px;}
+  .rc-table{width:100%;border-collapse:collapse;font-size:10.5px;}
+  .rc-table th,.rc-table td{border:1px solid var(--ink);padding:3px 4px;text-align:center;}
+  .rc-table th{background:var(--paper-deep);}
+  .rc-table td:first-child, .rc-table th:first-child{text-align:left;}
+  .rc-extra{display:flex;gap:18px;margin-top:10px;font-size:12px;flex-wrap:wrap;}
+  .rc-legend{margin-top:10px;font-size:10.5px;color:#444;border-top:1px solid var(--line);padding-top:8px;}
+  .rc-remarks{margin-top:12px;font-size:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .rc-sign{display:flex;justify-content:space-between;margin-top:28px;font-size:12px;flex-wrap:wrap;gap:10px;}
+  .rc-sign div{border-top:1px solid var(--ink);padding-top:6px;width:150px;text-align:center;}
+
+  .toast{position:fixed;bottom:18px;right:18px;background:var(--green-deep);color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none;z-index:60;}
+  .toast.show{opacity:1;transform:translateY(0);}
+
+  @media (max-width:600px){ header.letterhead{padding:20px 16px;} .letterhead h1{font-size:20px;} main{padding:16px;} }
+</style>
+</head>
+<body>
+
+<div id="lockScreen"></div>
+
+<div class="app" id="appRoot" style="display:none">
+  <header class="letterhead">
+    <div class="seal">MF</div>
+    <div><h1>MICHSARA Foundation School</h1>
+      <p>Bassa Community · Dolo Town, Margibi County — Administration System</p></div>
+    <div class="spacer"></div>
+    <div style="text-align:right">
+      <div class="who-badge" id="whoBadge"></div>
+      <button class="logout" onclick="logout()">Sign out</button>
+    </div>
+  </header>
+  <nav class="tabs" id="tabs"></nav>
+  <main id="main"></main>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="printArea"><div class="report-card" id="reportCardContent"></div></div>
+
+<script>
+const STORAGE_KEY = 'school-data';
+/* ===== FREE CLOUD STORAGE SETUP =====
+   Paste your Google Apps Script Web App URL between the quotes below.
+   See the setup guide for how to get this URL. Until you paste it,
+   the system will still work and save on THIS device/browser only. */
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz73tq6f-ldw76_aXRt0QWQDOLmmrlBTaqlbEJ43dzudu-J5GWeXTAJCl3KNOuNxaLU3A/exec';
+const LOCAL_BACKUP_KEY = 'michsara_school_data_backup_v1';
+let state = null;
+let role = null;
+let currentTeacher = null;
+let activeTab = 'dashboard';
+let filters = { className: 'All', date: todayISO(), gradeClass:null, gradeStudentId: null };
+let lockTab = 'admin';
+
+const PERIODS_S1 = ['1st Period','2nd Period','3rd Period'];
+const EXAM_S1 = '1st Semester Exam';
+const PERIODS_S2 = ['4th Period','5th Period','6th Period'];
+const EXAM_S2 = '2nd Semester Exam';
+
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function nowTime(){ return new Date().toTimeString().slice(0,5); }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+function money(n){ return 'L$' + Number(n||0).toLocaleString(); }
+function avg(nums){ const v = nums.filter(n=>n!==undefined && n!=='' && n!==null && !isNaN(n)); return v.length ? v.reduce((a,b)=>a+Number(b),0)/v.length : null; }
+function fmt1(n){ return n===null ? '—' : Number(n).toFixed(1); }
+
+const GROUP_NURSERY_K1 = 'Nursery–K1';
+const GROUP_K2_SIX = 'K2–6th Grade';
+
+function defaultState(){
+  const classes = ['Nursery','K1','K2','1st Grade','2nd Grade','3rd Grade','4th Grade','5th Grade','6th Grade'];
+  const classGroups = {};
+  classes.forEach(c=>{ classGroups[c] = (c==='Nursery'||c==='K1') ? GROUP_NURSERY_K1 : GROUP_K2_SIX; });
+  return {
+    classes,
+    classGroups,
+    subjectGroups: {
+      [GROUP_NURSERY_K1]: ['Religious Education','English/Language Art','Environmental Study','Natural Science','Phonics','Spelling','Social Studies','Aesthetics','Writing Numbers','Writing Letters','Reading','Recognizing Numbers','Recognizing Letters','Recognizing Colors/Shapes','Drawing','Physical Education'],
+      [GROUP_K2_SIX]: ['Language Arts','Science','Arithmetic','Health Science','Reading','Spelling','Social Studies','Phonics','Writing','Bible','Agriculture','French','Physical Education']
+    },
+    students: [],
+    attendance: {},
+    attendanceStaff: {},
+    grades: {},
+    remarks: {},
+    security: { adminPin: '1234', teachers: [] }
+  };
+}
+
+function migrate(s){
+  if(!s.attendanceStaff) s.attendanceStaff = {};
+  if(!s.remarks) s.remarks = {};
+  if(!s.security) s.security = { adminPin:'1234', teachers:[] };
+  if(!s.subjectGroups){
+    s.subjectGroups = {
+      [GROUP_NURSERY_K1]: ['Religious Education','English/Language Art','Environmental Study','Natural Science','Phonics','Spelling','Social Studies','Aesthetics','Writing Numbers','Writing Letters','Reading','Recognizing Numbers','Recognizing Letters','Recognizing Colors/Shapes','Drawing','Physical Education'],
+      [GROUP_K2_SIX]: ['Language Arts','Science','Arithmetic','Health Science','Reading','Spelling','Social Studies','Phonics','Writing','Bible','Agriculture','French','Physical Education']
+    };
+  }
+  if(!s.classGroups){
+    s.classGroups = {};
+    s.classes.forEach(c=>{ s.classGroups[c] = /nursery|k\s*1\b|kg\s*i\b/i.test(c) ? GROUP_NURSERY_K1 : GROUP_K2_SIX; });
+  }
+  s.classes.forEach(c=>{ if(!s.classGroups[c]) s.classGroups[c] = GROUP_K2_SIX; });
+  return s;
+}
+
+function cloudConfigured(){
+  return GAS_URL && GAS_URL.indexOf('PASTE_YOUR') === -1;
+}
+function loadLocalBackup(){
+  try{
+    const raw = localStorage.getItem(LOCAL_BACKUP_KEY);
+    return raw ? migrate(JSON.parse(raw)) : null;
+  }catch(e){ return null; }
+}
+async function loadData(){
+  // Always start from whatever this device last saw, so the UI is instant.
+  const local = loadLocalBackup();
+  if(local) state = local;
+  if(cloudConfigured()){
+    try{
+      const res = await fetch(GAS_URL + '?t=' + Date.now());
+      const text = await res.text();
+      const parsed = text ? JSON.parse(text) : null;
+      if(parsed && Object.keys(parsed).length){
+        state = migrate(parsed);
+        localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify(state));
+      } else if(!state){
+        state = defaultState();
+      }
+    }catch(e){
+      if(!state) state = defaultState();
+    }
+  } else if(!state){
+    state = defaultState();
+  }
+  renderLock();
+}
+async function saveData(msg){
+  // Save to this device immediately — never lose data even if offline.
+  try{ localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify(state)); }catch(e){}
+  if(!cloudConfigured()){
+    if(msg) showToast(msg + ' (saved on this device — cloud sync not set up yet)');
+    return;
+  }
+  try{
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(state)
+    });
+    if(!res.ok) throw new Error('bad response');
+    if(msg) showToast(msg);
+  }catch(e){ if(msg) showToast(msg + ' (saved on this device — will sync when online)'); }
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timer); t._timer = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+/* ---------- LOCK SCREEN ---------- */
+function renderLock(){
+  const el = document.getElementById('lockScreen');
+  const teacherOptions = state.security.teachers.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  el.innerHTML = `
+    <div class="lock-card">
+      <div class="seal" style="margin:0 auto 12px;">MF</div>
+      <h2>MICHSARA Foundation School</h2>
+      <p class="subtle">Enter your PIN to continue</p>
+      <div class="lock-tabs">
+        <button class="${lockTab==='admin'?'active':''}" onclick="setLockTab('admin')">Principal / Proprietor</button>
+        <button class="${lockTab==='teacher'?'active':''}" onclick="setLockTab('teacher')">Teacher</button>
+      </div>
+      ${lockTab==='admin' ? `
+        <div class="field"><label>Administration PIN</label><input type="password" id="adminPinInput" placeholder="••••"></div>
+        <div class="lock-error" id="lockError"></div>
+        <button class="action" style="width:100%" onclick="tryAdminLogin()">Enter</button>
+      ` : `
+        ${state.security.teachers.length===0 ? `<p class="subtle" style="text-align:left">No teacher accounts yet — ask an administrator to add one in Settings.</p>` : `
+        <div class="field"><label>Your name</label><select id="teacherSelect">${teacherOptions}</select></div>
+        <div class="field"><label>PIN</label><input type="password" id="teacherPinInput" placeholder="••••"></div>
+        <div class="lock-error" id="lockError"></div>
+        <button class="action" style="width:100%" onclick="tryTeacherLogin()">Sign In</button>
+        `}
+      `}
+      <div class="lock-note">Signing in as Teacher automatically records your attendance for today.</div>
+    </div>
+  `;
+}
+function setLockTab(t){ lockTab = t; renderLock(); }
+function tryAdminLogin(){
+  const pin = document.getElementById('adminPinInput').value;
+  if(pin === state.security.adminPin){ role='admin'; currentTeacher=null; activeTab='dashboard'; enterApp(); }
+  else document.getElementById('lockError').textContent = 'Incorrect PIN.';
+}
+function tryTeacherLogin(){
+  const id = document.getElementById('teacherSelect').value;
+  const pin = document.getElementById('teacherPinInput').value;
+  const teacher = state.security.teachers.find(t=>t.id===id);
+  if(teacher && pin === teacher.pin){
+    role='teacher'; currentTeacher={id:teacher.id,name:teacher.name}; activeTab='attendance';
+    const today = todayISO();
+    if(!state.attendanceStaff[today]) state.attendanceStaff[today] = {};
+    if(!state.attendanceStaff[today][teacher.id]){
+      state.attendanceStaff[today][teacher.id] = { name: teacher.name, time: nowTime() };
+      saveData();
+    }
+    enterApp();
+  } else document.getElementById('lockError').textContent = 'Name and PIN do not match.';
+}
+function enterApp(){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('appRoot').style.display='block';
+  render();
+}
+function logout(){
+  role=null; currentTeacher=null; lockTab='admin';
+  document.getElementById('appRoot').style.display='none';
+  document.getElementById('lockScreen').style.display='flex';
+  renderLock();
+}
+
+/* ---------- TABS ---------- */
+const TABS_ADMIN = [['dashboard','Dashboard'],['students','Students & Fees'],['attendance','Attendance'],['grades','Grades'],['staff','Staff Log'],['settings','Settings']];
+const TABS_TEACHER = [['attendance','Attendance'],['grades','Grades']];
+
+function renderTabs(){
+  const tabs = role==='admin' ? TABS_ADMIN : TABS_TEACHER;
+  document.getElementById('tabs').innerHTML = tabs.map(([key,label])=>
+    `<button class="${activeTab===key?'active':''}" onclick="setTab('${key}')">${label}</button>`).join('');
+  document.getElementById('whoBadge').textContent = role==='admin' ? 'Signed in — Principal / Proprietor' : `Signed in — ${currentTeacher.name} (Teacher)`;
+}
+function setTab(t){ activeTab=t; render(); }
+function render(){
+  renderTabs();
+  const main = document.getElementById('main');
+  if(activeTab==='dashboard') main.innerHTML = viewDashboard();
+  else if(activeTab==='students') main.innerHTML = viewStudents();
+  else if(activeTab==='attendance') main.innerHTML = viewAttendance();
+  else if(activeTab==='grades') main.innerHTML = viewGrades();
+  else if(activeTab==='staff') main.innerHTML = viewStaffLog();
+  else if(activeTab==='settings') main.innerHTML = viewSettings();
+}
+
+/* ---------- DASHBOARD ---------- */
+function viewDashboard(){
+  const totalStudents = state.students.length;
+  const today = todayISO();
+  const todayAtt = state.attendance[today] || {};
+  const presentToday = Object.values(todayAtt).filter(v=>v==='present').length;
+  const loggedToday = Object.keys(todayAtt).length;
+  const attRate = loggedToday ? Math.round(presentToday/loggedToday*100) : null;
+  const staffToday = state.attendanceStaff[today] || {};
+  const staffCount = Object.keys(staffToday).length;
+  let totalOwed=0, totalPaid=0;
+  state.students.forEach(s=>{ totalPaid += Number(s.fee.paid||0); totalOwed += Math.max(0, Number(s.fee.amount||0)-Number(s.fee.paid||0)); });
+  const byClass = {}; state.classes.forEach(c=>byClass[c]=state.students.filter(s=>s.class===c).length);
+  const byClassM = {}, byClassF = {};
+  state.classes.forEach(c=>{
+    byClassM[c] = state.students.filter(s=>s.class===c && s.sex==='M').length;
+    byClassF[c] = state.students.filter(s=>s.class===c && s.sex==='F').length;
+  });
+  const totalM = state.students.filter(s=>s.sex==='M').length;
+  const totalF = state.students.filter(s=>s.sex==='F').length;
+  return `
+    <h2 class="section-title">Dashboard</h2>
+    <p class="subtle">Overview across all classes — updates live as teachers sign in and log attendance and grades.</p>
+    <div class="cards">
+      <div class="card"><div class="num">${totalStudents}</div><div class="label">Total Students (${totalM} M / ${totalF} F)</div></div>
+      <div class="card ${attRate!==null && attRate<80 ? 'warn':''}"><div class="num">${attRate===null? '—' : attRate+'%'}</div><div class="label">Students Present Today (${loggedToday}/${totalStudents})</div></div>
+      <div class="card gold"><div class="num">${staffCount}</div><div class="label">Teachers Signed In Today</div></div>
+      <div class="card"><div class="num">${money(totalPaid)}</div><div class="label">Fees Collected</div></div>
+      <div class="card warn"><div class="num">${money(totalOwed)}</div><div class="label">Fees Outstanding</div></div>
+    </div>
+    <h2 class="section-title" style="font-size:17px">Students per Class</h2>
+    <table><tr><th>Class</th><th>Subject Group</th><th>Male</th><th>Female</th><th>Total</th></tr>
+      ${state.classes.map(c=>`<tr><td>${c}</td><td>${state.classGroups[c]}</td><td class="num-cell">${byClassM[c]}</td><td class="num-cell">${byClassF[c]}</td><td class="num-cell">${byClass[c]}</td></tr>`).join('') || `<tr><td colspan="5">No classes yet</td></tr>`}
+    </table>
+  `;
+}
+
+/* ---------- STUDENTS & FEES ---------- */
+function viewStudents(){
+  const list = state.students.filter(s=> filters.className==='All' || s.class===filters.className);
+  return `
+    <h2 class="section-title">Students & Fees</h2>
+    <p class="subtle">Add students, record fee amounts and payments across all classes.</p>
+    <div class="form-row">
+      <div class="field"><label>Filter by class</label>
+        <select onchange="filters.className=this.value; render()">
+          <option ${filters.className==='All'?'selected':''}>All</option>
+          ${state.classes.map(c=>`<option ${filters.className===c?'selected':''}>${c}</option>`).join('')}
+        </select></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Student name</label><input id="newName" placeholder="Full name"></div>
+      <div class="field"><label>Sex</label><select id="newSex"><option value="M">Male</option><option value="F">Female</option></select></div>
+      <div class="field"><label>Class</label><select id="newClass">${state.classes.map(c=>`<option>${c}</option>`).join('')}</select></div>
+      <div class="field"><label>Fee amount (L$)</label><input id="newFee" type="number" placeholder="0"></div>
+      <button class="action" onclick="addStudent()">Add Student</button>
+    </div>
+    ${list.length===0 ? `<div class="empty">No students in this view yet — add one above.</div>` : `
+    <table><tr><th>Name</th><th>Sex</th><th>Class</th><th>Fee Amount</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr>
+      ${list.map(s=>{
+        const bal = Number(s.fee.amount||0)-Number(s.fee.paid||0);
+        const status = bal<=0 ? 'paid' : (Number(s.fee.paid||0)>0 ? 'partial':'owed');
+        const statusLabel = bal<=0 ? 'Paid in Full' : (Number(s.fee.paid||0)>0 ? 'Partial':'Owing');
+        return `<tr><td>${s.name}</td><td>${s.sex==='F'?'Female':'Male'}</td><td>${s.class}</td><td class="num-cell">${money(s.fee.amount)}</td>
+          <td class="num-cell"><input type="number" value="${s.fee.paid||0}" style="width:90px" onchange="updatePaid('${s.id}', this.value)"></td>
+          <td class="num-cell">${money(bal)}</td><td><span class="pill ${status}">${statusLabel}</span></td>
+          <td><button class="small-x" onclick="removeStudent('${s.id}')">✕</button></td></tr>`;
+      }).join('')}
+    </table>`}
+  `;
+}
+function addStudent(){
+  const name = document.getElementById('newName').value.trim();
+  const sex = document.getElementById('newSex').value;
+  const cls = document.getElementById('newClass').value;
+  const fee = Number(document.getElementById('newFee').value||0);
+  if(!name){ showToast('Enter a student name'); return; }
+  state.students.push({ id:uid(), name, sex, class:cls, fee:{amount:fee, paid:0} });
+  saveData('Student added'); render();
+}
+function removeStudent(id){ state.students = state.students.filter(s=>s.id!==id); saveData('Student removed'); render(); }
+function updatePaid(id, val){ const s = state.students.find(s=>s.id===id); if(s){ s.fee.paid = Number(val||0); saveData('Payment updated'); } }
+
+/* ---------- STUDENT ATTENDANCE ---------- */
+function viewAttendance(){
+  const cls = filters.className==='All' ? (state.classes[0]||'') : filters.className;
+  const students = state.students.filter(s=>s.class===cls);
+  const dayRecord = state.attendance[filters.date] || {};
+  return `
+    <h2 class="section-title">Student Attendance</h2>
+    <p class="subtle">Mark each student present or absent for the selected date and class.</p>
+    <div class="form-row">
+      <div class="field"><label>Date</label><input type="date" value="${filters.date}" onchange="filters.date=this.value; render()"></div>
+      <div class="field"><label>Class</label><select onchange="filters.className=this.value; render()">${state.classes.map(c=>`<option ${cls===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    </div>
+    ${students.length===0 ? `<div class="empty">No students in this class yet.</div>` : `
+    <div class="att-grid">
+      ${students.map(s=>{
+        const val = dayRecord[s.id];
+        return `<div class="att-row"><div class="name">${s.name}</div><div class="att-toggle">
+          <button class="present ${val==='present'?'on':''}" onclick="markAttendance('${s.id}','present')">Present</button>
+          <button class="absent ${val==='absent'?'on':''}" onclick="markAttendance('${s.id}','absent')">Absent</button></div></div>`;
+      }).join('')}
+    </div>`}
+  `;
+}
+function markAttendance(studentId, val){
+  if(!state.attendance[filters.date]) state.attendance[filters.date]={};
+  state.attendance[filters.date][studentId]=val;
+  saveData('Attendance saved'); render();
+}
+function attendanceCounts(studentId){
+  let present=0, absent=0;
+  Object.values(state.attendance).forEach(day=>{
+    if(day[studentId]==='present') present++;
+    else if(day[studentId]==='absent') absent++;
+  });
+  return { present, absent };
+}
+
+/* ---------- STAFF LOG ---------- */
+function viewStaffLog(){
+  const dates = Object.keys(state.attendanceStaff).sort().reverse().slice(0,30);
+  return `
+    <h2 class="section-title">Staff Attendance Log</h2>
+    <p class="subtle">Captured automatically each time a teacher signs in for the day — no manual entry needed.</p>
+    ${dates.length===0 ? `<div class="empty">No sign-ins recorded yet.</div>` : dates.map(d=>{
+      const rows = state.attendanceStaff[d];
+      return `<h2 class="section-title" style="font-size:14px;margin-top:18px">${d}</h2>
+      <table style="max-width:420px"><tr><th>Teacher</th><th>Signed In</th></tr>
+      ${Object.values(rows).map(r=>`<tr><td>${r.name}</td><td class="num-cell">${r.time}</td></tr>`).join('')}
+      </table>`;
+    }).join('')}
+  `;
+}
+
+/* ---------- GRADES ---------- */
+function subjectsForClass(cls){ return state.subjectGroups[state.classGroups[cls]] || []; }
+
+// Class General Average: sum of subject scores for a given period divided by the number of subjects
+// e.g. Eng 87, Math 90, Science 86 -> (87+90+86)/3 = 87.6 — same method for every period column.
+function columnGeneral(studentId, subjects, column){
+  const vals = subjects.map(subj=> (state.grades[studentId] && state.grades[studentId][subj] && state.grades[studentId][subj][column]));
+  return avg(vals);
+}
+function studentGenerals(studentId, subjects){
+  const g = {};
+  [...PERIODS_S1, EXAM_S1, ...PERIODS_S2, EXAM_S2].forEach(col=>{ g[col] = columnGeneral(studentId, subjects, col); });
+  g.sem1 = avg([g[PERIODS_S1[0]], g[PERIODS_S1[1]], g[PERIODS_S1[2]], g[EXAM_S1]]);
+  g.sem2 = avg([g[PERIODS_S2[0]], g[PERIODS_S2[1]], g[PERIODS_S2[2]], g[EXAM_S2]]);
+  g.yearly = avg([g.sem1, g.sem2]);
+  return g;
+}
+function yearlyAvgForStudent(studentId, subjects){ return studentGenerals(studentId, subjects).yearly; }
+function rankInClassBy(studentId, cls, subjects, valueFn){
+  const classmates = state.students.filter(s=>s.class===cls);
+  const scored = classmates.map(s=>({ id:s.id, y: valueFn(s.id) })).filter(x=>x.y!==null);
+  scored.sort((a,b)=>b.y-a.y);
+  let rank = 1;
+  for(let i=0;i<scored.length;i++){
+    if(i>0 && scored[i].y < scored[i-1].y) rank = i+1;
+    if(scored[i].id===studentId) return { rank, of: scored.length };
+  }
+  return null;
+}
+function rankInClass(studentId, cls, subjects){
+  return rankInClassBy(studentId, cls, subjects, id=>yearlyAvgForStudent(id, subjects));
+}
+
+function viewGrades(){
+  const cls = filters.gradeClass || (filters.className!=='All' ? filters.className : state.classes[0]);
+  const subjects = subjectsForClass(cls);
+  const students = state.students.filter(s=>s.class===cls);
+  const selectedId = filters.gradeStudentId || (students[0] && students[0].id);
+  const student = state.students.find(s=>s.id===selectedId);
+
+  let bodyRows = '';
+  if(student){
+    bodyRows = subjects.map(subj=>{
+      const g = (state.grades[student.id] && state.grades[student.id][subj]) || {};
+      const s1 = avg([g[PERIODS_S1[0]],g[PERIODS_S1[1]],g[PERIODS_S1[2]],g[EXAM_S1]]);
+      const s2 = avg([g[PERIODS_S2[0]],g[PERIODS_S2[1]],g[PERIODS_S2[2]],g[EXAM_S2]]);
+      const yr = avg([s1,s2]);
+      const cell=(col)=>`<input class="grade-input" type="number" min="0" max="100" value="${g[col]??''}" onchange="setGrade('${student.id}','${subj.replace(/'/g,"\\'")}','${col}', this.value)">`;
+      return `<tr><td>${subj}</td>
+        <td>${cell(PERIODS_S1[0])}</td><td>${cell(PERIODS_S1[1])}</td><td>${cell(PERIODS_S1[2])}</td><td>${cell(EXAM_S1)}</td><td class="computed">${fmt1(s1)}</td>
+        <td>${cell(PERIODS_S2[0])}</td><td>${cell(PERIODS_S2[1])}</td><td>${cell(PERIODS_S2[2])}</td><td>${cell(EXAM_S2)}</td><td class="computed">${fmt1(s2)}</td>
+        <td class="computed">${fmt1(yr)}</td></tr>`;
+    }).join('');
+  }
+  const rem = student ? (state.remarks[student.id] || {conduct:'',teacher:'',principal:''}) : {};
+  const att = student ? attendanceCounts(student.id) : {present:0,absent:0};
+  const rk = student ? rankInClass(student.id, cls, subjects) : null;
+  const gAvg = student ? studentGenerals(student.id, subjects) : null;
+  const generalRow = student ? `<tr style="background:var(--paper-deep)"><td><strong>General Average</strong></td>
+    <td class="computed">${fmt1(gAvg[PERIODS_S1[0]])}</td><td class="computed">${fmt1(gAvg[PERIODS_S1[1]])}</td><td class="computed">${fmt1(gAvg[PERIODS_S1[2]])}</td><td class="computed">${fmt1(gAvg[EXAM_S1])}</td><td class="computed"><strong>${fmt1(gAvg.sem1)}</strong></td>
+    <td class="computed">${fmt1(gAvg[PERIODS_S2[0]])}</td><td class="computed">${fmt1(gAvg[PERIODS_S2[1]])}</td><td class="computed">${fmt1(gAvg[PERIODS_S2[2]])}</td><td class="computed">${fmt1(gAvg[EXAM_S2])}</td><td class="computed"><strong>${fmt1(gAvg.sem2)}</strong></td>
+    <td class="computed"><strong>${fmt1(gAvg.yearly)}</strong></td></tr>` : '';
+
+  return `
+    <h2 class="section-title">Grades</h2>
+    <p class="subtle">Enter scores per period — semester and yearly averages, days present/absent, and class rank are calculated automatically. Subjects shown depend on the class's level group (set in Settings).</p>
+    <div class="form-row">
+      <div class="field"><label>Class</label><select onchange="filters.gradeClass=this.value; filters.gradeStudentId=null; render()">${state.classes.map(c=>`<option ${cls===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="field"><label>Student</label><select onchange="filters.gradeStudentId=this.value; render()">${students.map(s=>`<option value="${s.id}" ${selectedId===s.id?'selected':''}>${s.name}</option>`).join('')}</select></div>
+      ${student ? `<button class="action secondary" onclick="printGradeSheet('${student.id}')">Print Report Card</button>` : ''}
+    </div>
+    ${!student ? `<div class="empty">No students in this class yet. ${subjects.length===0 ? 'Also: no subjects are assigned to this class group yet — set that in Settings.' : ''}</div>` : `
+    <div class="grade-summary">
+      <div class="gs">Days Present: <b>${att.present}</b></div>
+      <div class="gs">Days Absent: <b>${att.absent}</b></div>
+      <div class="gs">Rank in Class: <b>${rk ? rk.rank+' of '+rk.of : '—'}</b></div>
+    </div>
+    <div class="grades-table-wrap"><table>
+      <tr><th>Subject</th><th>1st Per.</th><th>2nd Per.</th><th>3rd Per.</th><th>Sem 1 Exam</th><th>Sem 1 Avg</th>
+      <th>4th Per.</th><th>5th Per.</th><th>6th Per.</th><th>Sem 2 Exam</th><th>Sem 2 Avg</th><th>Yearly Avg</th></tr>
+      ${bodyRows}
+      ${generalRow}
+    </table></div>
+    <p class="subtle" style="margin-top:8px">General Average = sum of every subject's score for that period ÷ number of subjects. This is what Class Rank is based on.</p>
+    <h2 class="section-title" style="font-size:15px;margin-top:22px">Remarks (appear on the printed report card)</h2>
+    <div class="form-row"><div class="field" style="flex:1;min-width:180px"><label>Conduct</label><input value="${rem.conduct||''}" onchange="setRemark('${student.id}','conduct',this.value)"></div></div>
+    <div class="form-row">
+      <div class="field" style="flex:1;min-width:260px"><label>Teacher's Remark</label><textarea rows="2" onchange="setRemark('${student.id}','teacher',this.value)">${rem.teacher||''}</textarea></div>
+      <div class="field" style="flex:1;min-width:260px"><label>Principal's Remark</label><textarea rows="2" onchange="setRemark('${student.id}','principal',this.value)">${rem.principal||''}</textarea></div>
+    </div>
+    `}
+  `;
+}
+function setGrade(studentId, subject, column, value){
+  if(!state.grades[studentId]) state.grades[studentId]={};
+  if(!state.grades[studentId][subject]) state.grades[studentId][subject]={};
+  state.grades[studentId][subject][column] = value==='' ? '' : Number(value);
+  saveData('Grade saved'); render();
+}
+function setRemark(studentId, field, value){
+  if(!state.remarks[studentId]) state.remarks[studentId]={conduct:'',teacher:'',principal:''};
+  state.remarks[studentId][field]=value; saveData('Remark saved');
+}
+function letterGrade(v){
+  if(v===null) return '—';
+  if(v>=90) return 'E';
+  if(v>=85) return 'V.G';
+  if(v>=80) return 'G';
+  if(v>=71) return 'S';
+  return 'F';
+}
+
+function printGradeSheet(studentId){
+  const student = state.students.find(s=>s.id===studentId);
+  if(!student) return;
+  const cls = student.class;
+  const subjects = subjectsForClass(cls);
+  const rem = state.remarks[studentId] || {conduct:'',teacher:'',principal:''};
+  const att = attendanceCounts(studentId);
+  const rk = rankInClass(studentId, cls, subjects);
+
+  const rows = subjects.map(subj=>{
+    const g = (state.grades[studentId] && state.grades[studentId][subj]) || {};
+    const s1 = avg([g[PERIODS_S1[0]],g[PERIODS_S1[1]],g[PERIODS_S1[2]],g[EXAM_S1]]);
+    const s2 = avg([g[PERIODS_S2[0]],g[PERIODS_S2[1]],g[PERIODS_S2[2]],g[EXAM_S2]]);
+    const yr = avg([s1,s2]);
+    const c=(col)=> (g[col]===undefined||g[col]==='') ? '—' : g[col];
+    return `<tr><td>${subj}</td><td>${c(PERIODS_S1[0])}</td><td>${c(PERIODS_S1[1])}</td><td>${c(PERIODS_S1[2])}</td><td>${c(EXAM_S1)}</td><td><strong>${fmt1(s1)}</strong></td>
+      <td>${c(PERIODS_S2[0])}</td><td>${c(PERIODS_S2[1])}</td><td>${c(PERIODS_S2[2])}</td><td>${c(EXAM_S2)}</td><td><strong>${fmt1(s2)}</strong></td><td><strong>${fmt1(yr)}</strong></td></tr>`;
+  }).join('');
+
+  const gAvg = studentGenerals(studentId, subjects);
+  const overallYearly = gAvg.yearly;
+  const generalRow = `<tr style="font-weight:700;background:#EFE6CC"><td>General Average</td>
+    <td>${fmt1(gAvg[PERIODS_S1[0]])}</td><td>${fmt1(gAvg[PERIODS_S1[1]])}</td><td>${fmt1(gAvg[PERIODS_S1[2]])}</td><td>${fmt1(gAvg[EXAM_S1])}</td><td>${fmt1(gAvg.sem1)}</td>
+    <td>${fmt1(gAvg[PERIODS_S2[0]])}</td><td>${fmt1(gAvg[PERIODS_S2[1]])}</td><td>${fmt1(gAvg[PERIODS_S2[2]])}</td><td>${fmt1(gAvg[EXAM_S2])}</td><td>${fmt1(gAvg.sem2)}</td><td>${fmt1(gAvg.yearly)}</td></tr>`;
+
+  document.getElementById('reportCardContent').innerHTML = `
+    <h2>MICHSARA Foundation School</h2>
+    <div class="rc-sub">Bassa Community · Dolo Town, Margibi County — Official Report Card</div>
+    <div class="rc-meta">
+      <div><strong>Student:</strong> ${student.name}</div>
+      <div><strong>Sex:</strong> ${student.sex==='F'?'Female':'Male'}</div>
+      <div><strong>Class:</strong> ${cls}</div>
+      <div><strong>Academic Year:</strong> ${new Date().getFullYear()}</div>
+    </div>
+    <table class="rc-table">
+      <tr><th>Subject</th><th>1P</th><th>2P</th><th>3P</th><th>S1 Exam</th><th>S1 Avg</th><th>4P</th><th>5P</th><th>6P</th><th>S2 Exam</th><th>S2 Avg</th><th>Yearly</th></tr>
+      ${rows}
+      ${generalRow}
+    </table>
+    <div class="rc-extra">
+      <div><strong>Days Present:</strong> ${att.present}</div>
+      <div><strong>Days Absent:</strong> ${att.absent}</div>
+      <div><strong>Rank in Class:</strong> ${rk ? rk.rank+' of '+rk.of : '—'}</div>
+      <div><strong>Overall Yearly Average:</strong> ${fmt1(overallYearly)}</div>
+      <div><strong>Grade:</strong> ${letterGrade(overallYearly)}</div>
+    </div>
+    <div class="rc-legend">
+      <strong>Grading:</strong> E = Excellent (90–100) &nbsp; V.G = Very Good (85–89) &nbsp; G = Good (80–84) &nbsp; S = Satisfactory (71–79) &nbsp; F = Failed (below 71)<br>
+      Any grade lower than 70% on the average will not be honored for promotion.
+    </div>
+    <div class="rc-remarks">
+      <div><strong>Conduct:</strong> ${rem.conduct||'—'}</div>
+      <div><strong>Teacher's Remark:</strong> ${rem.teacher||'—'}</div>
+      <div style="grid-column:1/-1"><strong>Principal's Remark:</strong> ${rem.principal||'—'}</div>
+    </div>
+    <div class="rc-sign"><div>Class Teacher</div><div>Principal</div><div>Proprietor / Proprietress</div></div>
+  `;
+  setTimeout(()=>window.print(), 100);
+}
+
+/* ---------- SETTINGS ---------- */
+function viewSettings(){
+  return `
+    <h2 class="section-title">Settings</h2>
+    <p class="subtle">Manage classes, subject groups, teacher accounts, and the administration PIN.</p>
+
+    <h2 class="section-title" style="font-size:16px">Administration PIN</h2>
+    <div class="form-row">
+      <div class="field"><label>New PIN</label><input type="password" id="newAdminPin" placeholder="4+ digits"></div>
+      <button class="action" onclick="changeAdminPin()">Update PIN</button>
+    </div>
+
+    <h2 class="section-title" style="font-size:16px;margin-top:24px">Teacher Accounts</h2>
+    <p class="subtle">Each teacher signs in with their name and PIN — this is also how their daily attendance is captured.</p>
+    <div class="form-row">
+      <div class="field"><label>Teacher name</label><input id="newTeacherName" placeholder="Full name"></div>
+      <div class="field"><label>PIN</label><input type="password" id="newTeacherPin" placeholder="4+ digits"></div>
+      <button class="action" onclick="addTeacher()">Add Teacher</button>
+    </div>
+    <table style="max-width:420px"><tr><th>Name</th><th>PIN</th><th></th></tr>
+      ${state.security.teachers.map(t=>`<tr><td>${t.name}</td><td class="num-cell">${t.pin}</td><td><button class="small-x" onclick="removeTeacher('${t.id}')">✕</button></td></tr>`).join('') || `<tr><td colspan="3">No teacher accounts yet</td></tr>`}
+    </table>
+
+    <h2 class="section-title" style="font-size:16px;margin-top:26px">Classes &amp; Subject Groups</h2>
+    <p class="subtle">Each class is assigned to a subject group, which decides which subjects appear on its grade sheets.</p>
+    <div class="form-row">
+      <div class="field"><label>New class name</label><input id="newClassName" placeholder="e.g. 7th Grade"></div>
+      <div class="field"><label>Subject group</label>
+        <select id="newClassGroup">${Object.keys(state.subjectGroups).map(g=>`<option>${g}</option>`).join('')}</select></div>
+      <button class="action" onclick="addClass()">Add Class</button>
+    </div>
+    <table style="max-width:480px"><tr><th>Class</th><th>Subject Group</th><th></th></tr>
+      ${state.classes.map(c=>`<tr><td>${c}</td><td>
+        <select onchange="setClassGroup('${c.replace(/'/g,"\\'")}', this.value)">
+          ${Object.keys(state.subjectGroups).map(g=>`<option ${state.classGroups[c]===g?'selected':''}>${g}</option>`).join('')}
+        </select></td><td><button class="small-x" onclick="removeClass('${c.replace(/'/g,"\\'")}')">✕</button></td></tr>`).join('')}
+    </table>
+
+    <h2 class="section-title" style="font-size:16px;margin-top:26px">${GROUP_NURSERY_K1} Subjects (16)</h2>
+    <div class="form-row"><input id="newSubjNK1" placeholder="e.g. Numeracy"><button class="action" onclick="addSubject('${GROUP_NURSERY_K1}','newSubjNK1')">Add Subject</button></div>
+    <table style="max-width:340px"><tr><th>Subject</th><th></th></tr>
+      ${state.subjectGroups[GROUP_NURSERY_K1].map(s=>`<tr><td>${s}</td><td><button class="small-x" onclick="removeSubject('${GROUP_NURSERY_K1}','${s.replace(/'/g,"\\'")}')">✕</button></td></tr>`).join('')}
+    </table>
+
+    <h2 class="section-title" style="font-size:16px;margin-top:26px">${GROUP_K2_SIX} Subjects (13)</h2>
+    <p class="subtle">Your sample listed 13 visible subjects for this level — tell me the 14th and I'll add it.</p>
+    <div class="form-row"><input id="newSubjK2" placeholder="e.g. Numeracy"><button class="action" onclick="addSubject('${GROUP_K2_SIX}','newSubjK2')">Add Subject</button></div>
+    <table style="max-width:340px"><tr><th>Subject</th><th></th></tr>
+      ${state.subjectGroups[GROUP_K2_SIX].map(s=>`<tr><td>${s}</td><td><button class="small-x" onclick="removeSubject('${GROUP_K2_SIX}','${s.replace(/'/g,"\\'")}')">✕</button></td></tr>`).join('')}
+    </table>
+  `;
+}
+function changeAdminPin(){
+  const v = document.getElementById('newAdminPin').value.trim();
+  if(v.length<4){ showToast('Use at least 4 digits'); return; }
+  state.security.adminPin = v; saveData('Administration PIN updated'); render();
+}
+function addTeacher(){
+  const name = document.getElementById('newTeacherName').value.trim();
+  const pin = document.getElementById('newTeacherPin').value.trim();
+  if(!name || pin.length<4){ showToast('Enter a name and a PIN of at least 4 digits'); return; }
+  state.security.teachers.push({ id:uid(), name, pin });
+  saveData('Teacher added'); render();
+}
+function removeTeacher(id){ state.security.teachers = state.security.teachers.filter(t=>t.id!==id); saveData('Teacher removed'); render(); }
+function addClass(){
+  const v = document.getElementById('newClassName').value.trim();
+  const g = document.getElementById('newClassGroup').value;
+  if(!v) return;
+  if(!state.classes.includes(v)){ state.classes.push(v); state.classGroups[v] = g; }
+  saveData('Class added'); render();
+}
+function removeClass(c){ state.classes = state.classes.filter(x=>x!==c); delete state.classGroups[c]; saveData('Class removed'); render(); }
+function setClassGroup(c, g){ state.classGroups[c] = g; saveData('Subject group updated'); render(); }
+function addSubject(group, inputId){
+  const v = document.getElementById(inputId).value.trim();
+  if(!v) return;
+  if(!state.subjectGroups[group].includes(v)) state.subjectGroups[group].push(v);
+  saveData('Subject added'); render();
+}
+function removeSubject(group, s){ state.subjectGroups[group] = state.subjectGroups[group].filter(x=>x!==s); saveData('Subject removed'); render(); }
+
+/* ---------- INIT ---------- */
+loadData();
+</script>
+</body>
+</html>
